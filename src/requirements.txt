@@ -1,0 +1,4 @@
+requests
+python-dotenv
+langchain
+langchain-openai  # For OpenAI models (you can swap with another provider) 
