@@ -5,12 +5,13 @@ and the real OpenAI API for LLM processing.
 
 import os
 import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from qwello_mock import MockQwelloAPI
 from prepare_guest_prompt import prepare_guest_prompt
 
-# Path for test output
-TEST_OUTPUT_DIR = "test_output"
+# Path for interview contexts - same as used by manage_interview_context.py
+CONTEXTS_DIR = Path("interview_contexts")
 
 
 def test_with_mock_qwello(guest_name: str, focus_areas: str, output_filename: str) -> str:
@@ -25,9 +26,9 @@ def test_with_mock_qwello(guest_name: str, focus_areas: str, output_filename: st
     Returns:
         Path to the generated output file
     """
-    # Ensure output directory exists
-    os.makedirs(TEST_OUTPUT_DIR, exist_ok=True)
-    output_path = os.path.join(TEST_OUTPUT_DIR, output_filename)
+    # Ensure contexts directory exists
+    CONTEXTS_DIR.mkdir(exist_ok=True)
+    output_path = CONTEXTS_DIR / output_filename
     
     # Create mock Qwello for testing
     mock_qwello = MockQwelloAPI()
@@ -76,9 +77,9 @@ def test_with_mock_qwello(guest_name: str, focus_areas: str, output_filename: st
     
     try:
         # Call the actual function that prepares the interview prompt
-        prepare_guest_prompt(guest_name, focus_areas, output_path)
+        prepare_guest_prompt(guest_name, focus_areas, str(output_path))
         print(f"✅ Successfully created interview brief for {guest_name} at {output_path}")
-        return output_path
+        return str(output_path)
     except Exception as e:
         print(f"❌ Error in test: {e}")
         raise
@@ -100,34 +101,36 @@ def main():
     
     print("🚀 Testing interview preparation pipeline with mock Qwello data")
     print("Using real OpenAI API for LLM processing\n")
+    print(f"Saving interview contexts to: {CONTEXTS_DIR}\n")
     
     # Test with pre-defined guests
     test_with_mock_qwello(
         "Bernie Sanders", 
         "Healthcare reform, Income inequality, Climate policy", 
-        "bernie_sanders_interview.txt"
+        "bernie_sanders.txt"
     )
     
     test_with_mock_qwello(
         "Jane Goodall", 
         "Wildlife conservation, Chimpanzee behavior, Environmental education", 
-        "jane_goodall_interview.txt"
+        "jane_goodall.txt"
     )
     
     test_with_mock_qwello(
         "Rosa Luxemburg", 
         "Revolutionary theory, Democratic socialism, Anti-imperialism", 
-        "rosa_luxemburg_interview.txt"
+        "rosa_luxemburg.txt"
     )
     
     # Test with an unknown guest (will generate generic data)
     test_with_mock_qwello(
         "Dr. Alex Johnson", 
         "Quantum computing, Machine learning ethics", 
-        "alex_johnson_interview.txt"
+        "alex_johnson.txt"
     )
     
-    print("\n✨ All tests completed. Check the test_output directory for results.")
+    print("\n✨ All tests completed. Check the interview_contexts directory for results.")
+    print("You can now use manage_interview_context.py to load these contexts for interviews.")
     return 0
 
 
