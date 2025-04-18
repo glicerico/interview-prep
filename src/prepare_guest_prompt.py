@@ -1,9 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
-from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
 
 def prepare_guest_prompt(guest_name: str, focus_areas: str, output_file: str = "interview_briefing.txt"):
     """
@@ -81,16 +80,18 @@ Format the output in a clear, structured way that an interviewer can easily proc
 """
     )
     
-    # Create and run the chain
-    chain = LLMChain(llm=llm, prompt=prompt_template)
-    structured_prompt = chain.invoke({
+    # Create and run the chain using the new pipe syntax
+    chain = prompt_template | llm
+    
+    # Invoke the chain with our input variables
+    result = chain.invoke({
         "guest_name": guest_name,
         "focus_areas": focus_areas,
         "qwello_text": qwello_text
     })
     
-    # Extract the result (LLMChain.invoke returns a dict)
-    final_prompt = structured_prompt["text"]
+    # Extract the result (result is the direct output from the LLM)
+    final_prompt = result.content
 
     # 5) Write the structured prompt to a file
     with open(output_file, "w", encoding="utf-8") as f:
