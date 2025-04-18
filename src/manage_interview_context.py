@@ -69,10 +69,7 @@ def load_context_to_redis(context_path):
         except Exception as e:
             print(f"\n⚠️ Could not connect to Redis: {e}")
             print("The interview context was not loaded into Redis.")
-            print("Please make sure Redis is running and try again.")
-            print("\nYou can start Redis with:")
-            print("  - Linux/macOS: redis-server")
-            print("  - Windows: Start the Redis service or use WSL")
+            print("Please make sure hrsdk's Redis container is running and try again.")
             print("\nThe context file is still available at:")
             print(f"  {context_path}")
             
