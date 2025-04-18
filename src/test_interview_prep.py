@@ -68,7 +68,7 @@ def test_with_mock_qwello(guest_name: str, focus_areas: str, output_filename: st
             
             return MockResponse(mock_response)
         else:
-            # For all other requests (like OpenAI), use the real implementation
+            # For all other URLs, use the real requests.post
             return original_post(url, headers=headers, json=json, timeout=timeout, **kwargs)
     
     # Apply the monkey patch

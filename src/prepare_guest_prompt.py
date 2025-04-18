@@ -1,10 +1,12 @@
 import os
 import requests
+import sys
+import argparse
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
-def prepare_guest_prompt(guest_name: str, focus_areas: str, output_file: str = "interview_briefing.txt"):
+def prepare_guest_prompt(guest_name: str, focus_areas: str, output_file: str = "interview_briefing.txt", store_in_redis: bool = False):
     """
     Creates a text-based briefing prompt for the robot based on Qwello data,
     processed through an LLM to create a more structured interview guide.
@@ -12,7 +14,10 @@ def prepare_guest_prompt(guest_name: str, focus_areas: str, output_file: str = "
     :param guest_name: The name of the guest being interviewed.
     :param focus_areas: Comma-separated or descriptive string of the guest's primary topics.
     :param output_file: The file to which the resulting briefing prompt should be written.
+    :param store_in_redis: Deprecated parameter, kept for backward compatibility.
     """
+    print(f"[INFO] Preparing new interview brief for {guest_name}...")
+    
     # 1) Load environment variables for Qwello and LLM
     load_dotenv()
     qwello_api_key = os.getenv('QWELLO_API_KEY', 'YOUR_QWELLO_API_KEY')
@@ -98,6 +103,7 @@ Format the output in a clear, structured way that an interviewer can easily proc
         f.write(final_prompt.strip() + "\n")
 
     print(f"[INFO] Structured interview prompt created: {output_file}")
+    return final_prompt
 
 
 if __name__ == "__main__":
@@ -105,11 +111,17 @@ if __name__ == "__main__":
     Example usage: 
     python prepare_guest_prompt.py "John Doe" "AI, NLP"
     """
-    import sys
-    if len(sys.argv) < 3:
-        print("Usage: python prepare_guest_prompt.py <guest_name> <focus_areas>")
-        sys.exit(1)
-
-    guest = sys.argv[1]
-    focus = sys.argv[2]
-    prepare_guest_prompt(guest, focus) 
+    parser = argparse.ArgumentParser(description="Prepare an interview brief for a guest.")
+    parser.add_argument("guest_name", help="Name of the guest")
+    parser.add_argument("focus_areas", help="Comma-separated areas of focus")
+    parser.add_argument("--output", "-o", default="interview_briefing.txt", 
+                        help="Output file name (default: interview_briefing.txt)")
+    
+    args = parser.parse_args()
+    
+    prepare_guest_prompt(
+        guest_name=args.guest_name,
+        focus_areas=args.focus_areas,
+        output_file=args.output,
+        store_in_redis=False  # Never store in Redis directly
+    ) 
