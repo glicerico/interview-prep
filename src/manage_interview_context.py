@@ -51,18 +51,35 @@ def list_available_contexts():
 
 def load_context_to_redis(context_path):
     """Load the selected context into Redis"""
-    redis_client = RedisClient()
-    
-    with open(context_path, 'r', encoding='utf-8') as f:
-        context_content = f.read()
-    
-    # Store in Redis under the key that the robot expects
-    redis_client.set_variable('interview_context', context_content)
-    print(f"\n✅ Loaded interview context into Redis as 'interview_context'")
-    
-    # Print a preview
-    preview = context_content[:200] + "..." if len(context_content) > 200 else context_content
-    print(f"\nPreview:\n{preview}")
+    try:
+        redis_client = RedisClient()
+        
+        with open(context_path, 'r', encoding='utf-8') as f:
+            context_content = f.read()
+        
+        # Try to store in Redis under the key that the robot expects
+        try:
+            redis_client.set_variable('interview_context', context_content)
+            print(f"\n✅ Loaded interview context into Redis as 'interview_context'")
+            
+            # Print a preview
+            preview = context_content[:200] + "..." if len(context_content) > 200 else context_content
+            print(f"\nPreview:\n{preview}")
+            
+        except Exception as e:
+            print(f"\n⚠️ Could not connect to Redis: {e}")
+            print("The interview context was not loaded into Redis.")
+            print("Please make sure Redis is running and try again.")
+            print("\nYou can start Redis with:")
+            print("  - Linux/macOS: redis-server")
+            print("  - Windows: Start the Redis service or use WSL")
+            print("\nThe context file is still available at:")
+            print(f"  {context_path}")
+            
+    except FileNotFoundError:
+        print(f"\n❌ Error: Context file not found: {context_path}")
+    except Exception as e:
+        print(f"\n❌ Error loading context: {e}")
 
 
 def create_new_context():
@@ -118,7 +135,7 @@ def main():
         while True:
             print("\nWhat would you like to do?")
             print("1. List available interview contexts")
-            print("2. Load a context into Redis")
+            print("2. Save an existing context into Redis")
             print("3. Create a new context")
             print("4. Exit")
             
