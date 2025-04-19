@@ -7,7 +7,49 @@ import sys
 import socket
 import argparse
 import subprocess
+import json
 from dotenv import load_dotenv
+
+def get_container_ip(container_name, network_name=None):
+    """Get the IP address of a Docker container"""
+    try:
+        # Get container details
+        result = subprocess.run(
+            ["docker", "inspect", container_name],
+            capture_output=True, text=True
+        )
+        
+        if result.returncode != 0:
+            return None
+        
+        # Parse the JSON output
+        container_info = json.loads(result.stdout)
+        
+        # If network name is provided, look for that specific network
+        if network_name:
+            networks = container_info[0]["NetworkSettings"]["Networks"]
+            if network_name in networks:
+                return networks[network_name]["IPAddress"]
+            return None
+        
+        # Otherwise, get the first IP address we find
+        networks = container_info[0]["NetworkSettings"]["Networks"]
+        for network, details in networks.items():
+            ip_address = details["IPAddress"]
+            if ip_address:
+                return ip_address
+        
+        # If no IP found in networks, try to get the host IP
+        # This is needed for containers using host network mode
+        if "host" in networks or container_info[0]["HostConfig"]["NetworkMode"] == "host":
+            print(f"✅ Container '{container_name}' is using host network mode")
+            return "127.0.0.1"  # Use localhost for host network
+        
+        return None
+    
+    except Exception as e:
+        print(f"❌ Error inspecting container: {e}")
+        return None
 
 def check_host_resolution(hostname):
     """Check if a hostname can be resolved"""
@@ -17,6 +59,13 @@ def check_host_resolution(hostname):
         return ip_address
     except socket.gaierror:
         print(f"❌ Cannot resolve hostname '{hostname}'")
+        
+        # Try to get IP from Docker if it's a container name
+        container_ip = get_container_ip(hostname, "host")
+        if container_ip:
+            print(f"✅ Found Docker container '{hostname}' with IP: {container_ip}")
+            return container_ip
+            
         return None
 
 def check_port_connectivity(host, port):
@@ -35,9 +84,8 @@ def list_docker_containers():
     """List running Docker containers"""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--format", "{{.Names}}\t{{.Ports}}"], 
-            capture_output=True, 
-            text=True
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Ports}}\t{{.NetworkSettings.Networks}}"], 
+            capture_output=True, text=True
         )
         if result.returncode == 0:
             print("\nRunning Docker containers:")
@@ -65,11 +113,11 @@ def list_docker_networks():
         print("❌ Could not list Docker networks. Is Docker running?")
         return False
 
-def test_redis_connection():
+def test_redis_connection(host=None, port=None):
     """Test Redis connection using redis_client.py"""
     try:
         from redis_client import RedisClient
-        client = RedisClient()
+        client = RedisClient(host=host, port=port)
         print(f"\nTesting Redis connection to {client.host}:{client.port} (DB: {client.db})")
         
         try:
@@ -85,15 +133,16 @@ def test_redis_connection():
 
 def main():
     parser = argparse.ArgumentParser(description="Test Redis connectivity in Docker environment")
-    parser.add_argument("--host", help="Redis host to test (default: from .env or 'redis')")
+    parser.add_argument("--host", help="Redis host to test (default: from .env or 'host')")
     parser.add_argument("--port", type=int, default=6379, help="Redis port to test (default: 6379)")
+    parser.add_argument("--network", default="host", help="Docker network name (default: host)")
     args = parser.parse_args()
     
     # Load environment variables
     load_dotenv()
     
     # Get Redis host from args, env, or default
-    redis_host = args.host or os.getenv("REDIS_HOST", "redis")
+    redis_host = args.host or os.getenv("REDIS_HOST", "host")
     redis_port = args.port or int(os.getenv("REDIS_PORT", 6379))
     
     print(f"🔍 Testing Redis connectivity to {redis_host}:{redis_port}")
@@ -104,24 +153,47 @@ def main():
     
     # Check hostname resolution
     ip = check_host_resolution(redis_host)
+    
+    # If hostname resolution fails but it's a Docker container, try to get its IP
+    if not ip and redis_host.startswith("hrsdk-"):
+        print(f"\nTrying to find Docker container IP for '{redis_host}'...")
+        ip = get_container_ip(redis_host, args.network)
+        if ip:
+            print(f"✅ Found Docker container '{redis_host}' with IP: {ip}")
+            
+            # Update .env file with the IP
+            print(f"\nℹ️ Consider updating your .env file with:")
+            print(f"REDIS_HOST={ip}")
+    
+    # If still no IP but we're using 'host' as hostname, try localhost
+    if not ip and redis_host == "host":
+        print("\nTrying localhost (127.0.0.1) since 'host' network is specified...")
+        ip = "127.0.0.1"
+    
     if ip:
         # Check port connectivity
         check_port_connectivity(ip, redis_port)
+        
+        # Test Redis connection with the IP
+        test_redis_connection(host=ip, port=redis_port)
     else:
         print("\n🔧 Suggestions:")
         print("1. If using container name, make sure you're on the same Docker network")
-        print("2. Try using 'localhost' or the Docker host IP if running from host machine")
+        print("2. Try using 'localhost' or '127.0.0.1' if the container uses host networking")
         print("3. Check if the Redis container is running with 'docker ps | grep redis'")
+        print("4. Try to find the container IP with: python src/find_redis_ip.py --update-env")
     
-    # Test actual Redis connection
-    test_redis_connection()
+    # Test actual Redis connection with original parameters
+    test_redis_connection(host=redis_host, port=redis_port)
     
     print("\n📋 Summary:")
     print(f"- Redis host: {redis_host}")
     print(f"- Redis port: {redis_port}")
+    if ip and ip != redis_host:
+        print(f"- Container IP: {ip}")
     print("- Check the output above for connection status and suggestions")
     
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

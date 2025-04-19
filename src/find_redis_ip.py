@@ -24,6 +24,11 @@ def find_container_ip(container_name, network_name=None):
         # Parse the JSON output
         container_info = json.loads(result.stdout)
         
+        # Check if container uses host network
+        if container_info[0]["HostConfig"]["NetworkMode"] == "host":
+            print(f"✅ Container '{container_name}' is using host network mode")
+            return "127.0.0.1"  # Use localhost for host network
+        
         # If network name is provided, look for that specific network
         if network_name:
             networks = container_info[0]["NetworkSettings"]["Networks"]
@@ -85,10 +90,18 @@ def update_env_file(ip_address):
 def main():
     parser = argparse.ArgumentParser(description="Find the IP address of a Redis container")
     parser.add_argument("--container", default="hrsdk-redis-1", help="Redis container name")
-    parser.add_argument("--network", default="hrsdk_default", help="Docker network name")
+    parser.add_argument("--network", default="host", help="Docker network name (default: host)")
     parser.add_argument("--update-env", action="store_true", help="Update .env file with the IP address")
+    parser.add_argument("--use-localhost", action="store_true", help="Use localhost (127.0.0.1)")
     
     args = parser.parse_args()
+    
+    # If --use-localhost is specified, just use 127.0.0.1
+    if args.use_localhost:
+        print("✅ Using localhost (127.0.0.1) as requested")
+        if args.update_env:
+            update_env_file("127.0.0.1")
+        return 0
     
     print(f"🔍 Looking for container '{args.container}' on network '{args.network}'...")
     

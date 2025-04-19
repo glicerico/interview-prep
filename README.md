@@ -12,18 +12,20 @@ To connect to Redis running in a Docker container:
 
 2. Edit the `.env` file to set your Redis connection parameters:
    ```
-   REDIS_HOST=redis  # Use the service name from docker-compose
+   # For Redis in Docker using host network:
+   REDIS_HOST=127.0.0.1
    REDIS_PORT=6379
    REDIS_PASSWORD=your_password_if_needed
    ```
 
 3. If you're running this code in a separate container:
    - Make sure it's on the same Docker network as the Redis container
-   - Use the Redis service name as the host (e.g., `redis`)
+   - Use the Redis service name as the host (e.g., `hrsdk-redis-1`) or use host networking
 
-4. If you're running this code on the host machine:
-   - Set `REDIS_HOST` to the IP address where Docker is running (often `localhost` or `127.0.0.1`)
-   - Make sure the Redis port is mapped to the host (e.g., `-p 6379:6379` in your Redis container)
+4. Test your Redis connection:
+   ```bash
+   python src/docker_redis_test.py
+   ```
 
 ## Usage
 

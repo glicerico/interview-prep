@@ -39,9 +39,16 @@ def get_container_ip(container_name, network_name=None):
             if ip_address:
                 return ip_address
         
+        # If no IP found in networks, try to get the host IP
+        # This is needed for containers using host network mode
+        if "host" in networks or container_info[0]["HostConfig"]["NetworkMode"] == "host":
+            print(f"✅ Container '{container_name}' is using host network mode")
+            return "127.0.0.1"  # Use localhost for host network
+        
         return None
     
-    except Exception:
+    except Exception as e:
+        print(f"❌ Error inspecting container: {e}")
         return None
 
 def check_host_resolution(hostname):
@@ -54,7 +61,7 @@ def check_host_resolution(hostname):
         print(f"❌ Cannot resolve hostname '{hostname}'")
         
         # Try to get IP from Docker if it's a container name
-        container_ip = get_container_ip(hostname, "hrsdk_default")
+        container_ip = get_container_ip(hostname, "host")
         if container_ip:
             print(f"✅ Found Docker container '{hostname}' with IP: {container_ip}")
             return container_ip
@@ -77,9 +84,8 @@ def list_docker_containers():
     """List running Docker containers"""
     try:
         result = subprocess.run(
-            ["docker", "ps", "--format", "{{.Names}}\t{{.Ports}}"], 
-            capture_output=True, 
-            text=True
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Ports}}\t{{.NetworkSettings.Networks}}"], 
+            capture_output=True, text=True
         )
         if result.returncode == 0:
             print("\nRunning Docker containers:")
@@ -127,16 +133,16 @@ def test_redis_connection(host=None, port=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Test Redis connectivity in Docker environment")
-    parser.add_argument("--host", help="Redis host to test (default: from .env or 'redis')")
+    parser.add_argument("--host", help="Redis host to test (default: from .env or '127.0.0.1')")
     parser.add_argument("--port", type=int, default=6379, help="Redis port to test (default: 6379)")
-    parser.add_argument("--network", default="hrsdk_default", help="Docker network name")
+    parser.add_argument("--network", default="host", help="Docker network name (default: host)")
     args = parser.parse_args()
     
     # Load environment variables
     load_dotenv()
     
     # Get Redis host from args, env, or default
-    redis_host = args.host or os.getenv("REDIS_HOST", "hrsdk-redis-1")
+    redis_host = args.host or os.getenv("REDIS_HOST", "127.0.0.1")
     redis_port = args.port or int(os.getenv("REDIS_PORT", 6379))
     
     print(f"🔍 Testing Redis connectivity to {redis_host}:{redis_port}")
@@ -159,6 +165,11 @@ def main():
             print(f"\nℹ️ Consider updating your .env file with:")
             print(f"REDIS_HOST={ip}")
     
+    # If still no IP but we're using 'host' as hostname, try localhost
+    if not ip and redis_host == "host":
+        print("\nTrying localhost (127.0.0.1) since 'host' network is specified...")
+        ip = "127.0.0.1"
+    
     if ip:
         # Check port connectivity
         check_port_connectivity(ip, redis_port)
@@ -168,7 +179,7 @@ def main():
     else:
         print("\n🔧 Suggestions:")
         print("1. If using container name, make sure you're on the same Docker network")
-        print("2. Try using 'localhost' or the Docker host IP if running from host machine")
+        print("2. Try using 'localhost' or '127.0.0.1' if the container uses host networking")
         print("3. Check if the Redis container is running with 'docker ps | grep redis'")
         print("4. Try to find the container IP with: python src/find_redis_ip.py --update-env")
     
@@ -185,4 +196,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

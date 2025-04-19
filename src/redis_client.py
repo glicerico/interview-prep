@@ -9,7 +9,7 @@ class RedisClient:
         load_dotenv()
         
         # Use parameters if provided, otherwise fall back to environment variables
-        self.host = host or os.getenv('REDIS_HOST', 'localhost')
+        self.host = host or os.getenv('REDIS_HOST', '127.0.0.1')
         self.port = port or int(os.getenv('REDIS_PORT', 6379))
         self.db = db or int(os.getenv('REDIS_DB', 0))
         self.password = password or os.getenv('REDIS_PASSWORD', None)

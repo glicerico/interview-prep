@@ -129,29 +129,23 @@ I've prepared some questions based on your background and expertise.
 
 When connecting to Redis running in a Docker container:
 
-1. Find the name of your Redis container:
-   ```bash
-   docker ps -a | grep redis
+1. The simplest approach is to use localhost:
+   ```
+   REDIS_HOST=127.0.0.1
+   REDIS_PORT=6379
    ```
 
-2. Update your `.env` file with the correct container name:
-   ```
-   REDIS_HOST=hrsdk-redis-1  # Use your actual container name
-   ```
+2. This works when:
+   - The Redis container is using host networking
+   - The Redis container has its ports mapped to the host
+   - You're running your scripts on the same machine as Docker
 
-3. If running from outside the Docker network:
-   ```bash
-   # Find the Docker network
-   docker network ls
-   
-   # Connect to the same network (if running your script in a different container)
-   docker run --network=hrsdk_default your-container
-   
-   # Or use host networking if running directly on the host
-   REDIS_HOST=localhost
-   ```
-
-4. Test your Redis connection:
+3. Test your Redis connection:
    ```bash
    python -m src.redis_client --list
+   ```
+
+4. If you need to find the IP of a specific Redis container:
+   ```bash
+   python src/find_redis_ip.py --update-env
    ``` 
