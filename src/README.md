@@ -123,4 +123,35 @@ I've prepared some questions based on your background and expertise.
 - Ensure you have a valid Qwello API key and endpoint if running against the real service.
 - Adjust request timeouts, logging, etc., based on your production needs.
 - The Redis integration makes it easy for the robot to access the interview data.
-- The system is designed to be efficient by reusing existing interview briefs when available. 
+- The system is designed to be efficient by reusing existing interview briefs when available.
+
+## Docker Redis Connection
+
+When connecting to Redis running in a Docker container:
+
+1. Find the name of your Redis container:
+   ```bash
+   docker ps -a | grep redis
+   ```
+
+2. Update your `.env` file with the correct container name:
+   ```
+   REDIS_HOST=hrsdk-redis-1  # Use your actual container name
+   ```
+
+3. If running from outside the Docker network:
+   ```bash
+   # Find the Docker network
+   docker network ls
+   
+   # Connect to the same network (if running your script in a different container)
+   docker run --network=hrsdk_default your-container
+   
+   # Or use host networking if running directly on the host
+   REDIS_HOST=localhost
+   ```
+
+4. Test your Redis connection:
+   ```bash
+   python -m src.redis_client --list
+   ``` 

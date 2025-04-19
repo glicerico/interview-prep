@@ -52,6 +52,7 @@ def list_available_contexts():
 def load_context_to_redis(context_path):
     """Load the selected context into Redis"""
     try:
+        # Create Redis client with configurable connection parameters
         redis_client = RedisClient()
         
         with open(context_path, 'r', encoding='utf-8') as f:
@@ -61,6 +62,9 @@ def load_context_to_redis(context_path):
         try:
             redis_client.set_variable('interview_context', context_content)
             print(f"\n✅ Loaded interview context into Redis as 'interview_context'")
+            
+            # Print connection info for debugging
+            print(f"\nConnected to Redis at {redis_client.host}:{redis_client.port} (DB: {redis_client.db})")
             
             # Print a preview
             preview = context_content[:200] + "..." if len(context_content) > 200 else context_content
