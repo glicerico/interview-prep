@@ -65,8 +65,6 @@ def create_port_forward(container_ip, container_port, host_port):
     if not check_socat_installed():
         print("❌ socat is not installed. Please install it first:")
         print("  - Ubuntu/Debian: sudo apt-get install socat")
-        print("  - macOS: brew install socat")
-        print("  - Windows: Install WSL and then install socat in WSL")
         return None
     
     try:

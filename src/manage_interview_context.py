@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manage interview contexts for the Desi robot.
+Manage interview contexts for hrsdk characters.
 
 This script allows users to:
 1. List available interview contexts stored as text files
@@ -122,7 +122,7 @@ def create_new_context():
 
 def main():
     """Main function to manage interview contexts"""
-    parser = argparse.ArgumentParser(description="Manage interview contexts for the Desi robot")
+    parser = argparse.ArgumentParser(description="Manage interview contexts for robots")
     parser.add_argument("--list", action="store_true", help="List available contexts")
     parser.add_argument("--load", type=int, help="Load a specific context by number")
     parser.add_argument("--new", action="store_true", help="Create a new context")
@@ -131,7 +131,7 @@ def main():
     
     # If no arguments provided, run in interactive mode
     if len(sys.argv) == 1:
-        print("🤖 Desi Interview Context Manager")
+        print("🤖 hrsdk Interview Context Manager")
         
         while True:
             print("\nWhat would you like to do?")

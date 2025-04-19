@@ -1,6 +1,6 @@
-# Desi Interview Preparation Pipeline
+# hrsdk Interview Preparation Pipeline
 
-This folder provides a Python-based pipeline that fetches background data from the Qwello API, processes it through an LLM using LangChain, and generates a structured interview prompt for the humanoid robot Desi to use during interviews.
+This folder provides a Python-based pipeline that fetches background data from the Qwello API, processes it through an LLM using LangChain, and generates a structured interview prompt for an hrsdk character to use during interviews.
 
 ## Contents
 
@@ -36,9 +36,9 @@ This folder provides a Python-based pipeline that fetches background data from t
 
 1. **Install Dependencies**:
    ```bash
-   cd desi_pipeline
+   cd interview_preparation
    python -m venv venv
-   source venv/bin/activate  # or venv\Scripts\activate on Windows
+   source venv/bin/activate
    pip install -r requirements.txt
    ```
 
@@ -85,7 +85,7 @@ This folder provides a Python-based pipeline that fetches background data from t
 
 1. The script prompts for guest information
 2. It queries the Qwello API for background data on the guest
-3. The data is processed through an LLM (default: GPT-4) via LangChain
+3. The data is processed through an LLM via LangChain
 4. The LLM structures the information into sections like:
    - Guest background
    - Key topics
@@ -110,7 +110,7 @@ In your robot's Jinja2 templates, you can access the interview data like this:
 ```
 {% set guest_key = "interview:guest:" + guest_name|lower|replace(" ", "_") %}
 
-Hello, I'm Desi, and I'll be interviewing {{ guest_name }} today.
+Hello, I'm a robot, and I'll be interviewing {{ guest_name }} today.
 
 {% if redis_get(guest_key) %}
 I've prepared some questions based on your background and expertise.
