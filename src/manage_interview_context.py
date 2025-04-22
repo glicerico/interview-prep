@@ -70,8 +70,54 @@ def list_available_contexts():
     return contexts
 
 
+def get_or_create_session_id(redis_client):
+    """
+    Get the current session ID from Redis or create a new one if it doesn't exist.
+    
+    Args:
+        redis_client: An instance of RedisClient
+        
+    Returns:
+        str: The session ID
+    """
+    # Try to get existing session ID
+    session_id = redis_client.client.get('default.current_session')
+    
+    if not session_id:
+        # If no session ID exists, create a new one
+        import uuid
+        session_id = uuid.uuid4().hex
+        redis_client.set_variable('default.current_session', session_id)
+        print(f"Created new session ID: {session_id}")
+    else:
+        # Handle both string and bytes types
+        if isinstance(session_id, bytes):
+            session_id = session_id.decode('utf-8')
+        print(f"Using existing session ID: {session_id}")
+    
+    return session_id
+
+
+def get_redis_key(base_key, redis_client=None):
+    """
+    Format a Redis key with the current session ID prefix.
+    
+    Args:
+        base_key (str): The base key name
+        redis_client (RedisClient, optional): Redis client instance. If None, a new one is created.
+        
+    Returns:
+        str: The formatted key with session ID prefix
+    """
+    if redis_client is None:
+        redis_client = RedisClient()
+    
+    session_id = get_or_create_session_id(redis_client)
+    return f"default.{session_id}.{base_key}"
+
+
 def load_context_to_redis(context_path):
-    """Load the selected context into Redis"""
+    """Load the selected context into Redis with session ID prefix"""
     try:
         # Create Redis client with configurable connection parameters
         redis_client = RedisClient()
@@ -81,8 +127,12 @@ def load_context_to_redis(context_path):
         
         # Try to store in Redis under the key that the robot expects
         try:
-            redis_client.set_variable('interview_context', context_content)
-            print(f"\n✅ Loaded interview context into Redis as 'interview_context'")
+            # Get the formatted Redis key with session ID
+            redis_key = get_redis_key('interview_context', redis_client)
+            
+            # Store the context with the session-prefixed key
+            redis_client.set_variable(redis_key, context_content)
+            print(f"\n✅ Loaded interview context into Redis as '{redis_key}'")
             
             # Print connection info for debugging
             print(f"\nConnected to Redis at {redis_client.host}:{redis_client.port} (DB: {redis_client.db})")
