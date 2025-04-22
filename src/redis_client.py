@@ -74,6 +74,27 @@ class RedisClient:
             print("No keys found.")
             return []
 
+    def delete_variable(self, key):
+        """Delete a variable from Redis
+        
+        Args:
+            key (str): The key to delete
+            
+        Returns:
+            bool: True if the key was deleted, False otherwise
+        """
+        try:
+            result = self.client.delete(key)
+            if result > 0:
+                print(f"✅ Deleted '{key}' from Redis")
+                return True
+            else:
+                print(f"⚠️ Key '{key}' not found in Redis")
+                return False
+        except Exception as e:
+            print(f"❌ Error deleting key '{key}': {e}")
+            return False
+
 
 def main():
     load_dotenv()  # Load environment variables
@@ -82,6 +103,7 @@ def main():
     parser.add_argument('--set', nargs=2, metavar=('KEY', 'VALUE'), help="Set a variable to a specified value.")
     parser.add_argument('--get', metavar='KEY', help="Get the value of a specified variable.")
     parser.add_argument('--list', action='store_true', help="List all variables.")
+    parser.add_argument('--delete', metavar='KEY', help="Delete a variable from Redis.")
     parser.add_argument('--host', help="Redis host (default: from REDIS_HOST env var or localhost)")
     parser.add_argument('--port', type=int, help="Redis port (default: from REDIS_PORT env var or 6379)")
     parser.add_argument('--db', type=int, help="Redis database (default: from REDIS_DB env var or 0)")
@@ -102,6 +124,8 @@ def main():
         redis_client.get_variable(args.get)
     elif args.list:
         redis_client.list_variables()
+    elif args.delete:
+        redis_client.delete_variable(args.delete)
     else:
         parser.print_help()
 
