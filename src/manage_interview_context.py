@@ -14,6 +14,7 @@ that the robot's template system expects.
 import os
 import sys
 import argparse
+import platform
 from pathlib import Path
 from redis_client import RedisClient
 from prepare_guest_prompt import prepare_guest_prompt
@@ -21,6 +22,26 @@ from prepare_guest_prompt import prepare_guest_prompt
 # Directory to store interview context files
 CONTEXTS_DIR = Path("interview_contexts")
 
+# ASCII art header
+HEADER_ART = r"""
+ _   _ ____  ____  ____  _  __   _____ _   _ _____ _____ ______     _____ _____ _ _ _ 
+| | | |  _ \/ ___||  _ \| |/ /  |_   _| \ | |_   _| ____|  _ \ \   / /_ _| ____| | | |
+| |_| | |_) \___ \| | | | ' /     | | |  \| | | | |  _| | |_) \ \ / / | ||  _| | | | |
+|  _  |  _ < ___) | |_| | . \    _| |_| |\  | | | | |___|  _ < \ V /  | || |___|_|_|_|
+|_| |_|_| \_\____/|____/|_|\_\  |_____|_| \_| |_| |_____|_| \_\ \_/  |___|_____(_|_|_)
+                                                                                       
+"""
+
+def clear_screen():
+    """Clear the terminal screen"""
+    os.system("clear")
+
+def print_header():
+    """Print the ASCII art header and a separator line"""
+    print(HEADER_ART)
+    print("INTERVIEW CONTEXT MANAGER")
+    print("=" * 80)
+    print()
 
 def ensure_contexts_dir():
     """Ensure the contexts directory exists"""
@@ -131,9 +152,11 @@ def main():
     
     # If no arguments provided, run in interactive mode
     if len(sys.argv) == 1:
-        print("🤖 hrsdk Interview Context Manager")
         
         while True:
+            clear_screen()
+            print_header()
+
             print("\nWhat would you like to do?")
             print("1. List available interview contexts")
             print("2. Save an existing context into Redis")
@@ -142,12 +165,22 @@ def main():
             
             choice = input("\nEnter your choice (1-4): ").strip()
             
+            # Clear screen and reprint header for better UI experience
+            clear_screen()
+            print_header()
+            
             if choice == '1':
+                print("📋 LISTING AVAILABLE CONTEXTS")
+                print("-" * 40)
                 list_available_contexts()
+                input("\nPress Enter to return to the main menu...")
             
             elif choice == '2':
+                print("💾 LOADING CONTEXT INTO REDIS")
+                print("-" * 40)
                 contexts = list_available_contexts()
                 if not contexts:
+                    input("\nPress Enter to return to the main menu...")
                     continue
                 
                 selection = input("\nEnter the number of the context to load (or 0 to cancel): ").strip()
@@ -160,27 +193,41 @@ def main():
                         _, guest_name, file_path = contexts[selection-1]
                         print(f"\nLoading context for {guest_name}...")
                         load_context_to_redis(file_path)
+                        input("\nPress Enter to return to the main menu...")
                     else:
                         print("Invalid selection.")
+                        input("\nPress Enter to return to the main menu...")
                 except ValueError:
                     print("Please enter a valid number.")
+                    input("\nPress Enter to return to the main menu...")
             
             elif choice == '3':
+                print("📝 CREATING NEW CONTEXT")
+                print("-" * 40)
                 create_new_context()
+                input("\nPress Enter to return to the main menu...")
             
             elif choice == '4':
+                clear_screen()
+                print_header()
                 print("Goodbye! 👋")
                 break
             
             else:
-                print("Invalid choice. Please enter a number between 1 and 4.")
+                print(f"❌ Invalid choice: '{choice}'")
+                print("Please enter a number between 1 and 4.")
+                input("\nPress Enter to return to the main menu...")
     
     # Handle command-line arguments
     else:
         if args.list:
+            clear_screen()
+            print_header()
             list_available_contexts()
         
         elif args.load is not None:
+            clear_screen()
+            print_header()
             contexts = list_available_contexts()
             if contexts and 1 <= args.load <= len(contexts):
                 _, guest_name, file_path = contexts[args.load-1]
@@ -191,6 +238,8 @@ def main():
                 return 1
         
         elif args.new:
+            clear_screen()
+            print_header()
             create_new_context()
     
     return 0
