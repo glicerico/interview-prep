@@ -36,12 +36,7 @@ This toolkit provides:
 
 ## Setup
 
-### Prerequisites
-
-- Python 3.6+
-- Redis server (local or in Docker)
-
-### Installation
+### Quick Setup
 
 1. **Clone the repository**:
    ```bash
@@ -49,29 +44,21 @@ This toolkit provides:
    cd interview-prep
    ```
 
-2. **Install dependencies**:
+2. **Run the setup script**:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
+   chmod +x setup.sh
+   ./setup.sh
    ```
 
-3. **Configure Redis connection**:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit the `.env` file with your Redis connection details:
-   ```
-   REDIS_HOST=127.0.0.1
-   REDIS_PORT=6379
-   REDIS_PASSWORD=your_password_if_needed
-   ```
+   This script will:
+   - Create a Python virtual environment
+   - Install all dependencies
+   - Make the scripts executable
+   - Create a template .env file
+   - Create the interview_contexts directory
 
-4. **Test your Redis connection**:
-   ```bash
-   python src/test_redis.py
-   ```
+3. **Edit the .env file** with your Redis connection details
+
 
 ## Usage
 
@@ -80,9 +67,8 @@ This toolkit provides:
 Run the interactive context manager:
 
 ```bash
-python src/manage_interview_context.py
+./src/manage_interview_context.py
 ```
-
 
 This presents a menu with options to:
 - List available interview contexts
@@ -93,13 +79,12 @@ This presents a menu with options to:
 You can also use command-line arguments:
 ```bash
 # List available interview contexts
-python src/manage_interview_context.py --list
+./src/manage_interview_context.py --list
 # Load context 2 into Redis for the robot
-python src/manage_interview_context.py --load 2
+./src/manage_interview_context.py --load 2
 # Create a new context
-python src/manage_interview_context.py --new
+./src/manage_interview_context.py --new
 ```
-
 
 ### Working with Redis Directly
 
@@ -107,18 +92,17 @@ The `redis_client.py` utility allows direct interaction with Redis:
 
 ```bash
 # List available redis variables
-python src/redis_client.py
+./src/redis_client.py --list
 
 # Get a specific variable
-python src/redis_client.py --get <key>
+./src/redis_client.py --get <key>
 
 # Set a specific variable
-python src/redis_client.py --set <key> <value>
+./src/redis_client.py --set <key> <value>
 
 # Delete a specific variable
-python src/redis_client.py --delete <key>
+./src/redis_client.py --delete <key>
 ```
-
 
 ## How It Works
 
@@ -151,7 +135,6 @@ In your robot's Jinja2 templates, you can access the interview data like this:
 {# Use the interview context data here #}
 {% endif %}
 ```
-
 
 ## Notes
 
