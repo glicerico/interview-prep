@@ -1,4 +1,4 @@
-#!/usr/bin/env ./venv/bin/python
+#!/usr/bin/env python3
 
 import redis
 import argparse

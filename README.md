@@ -62,46 +62,23 @@ This toolkit provides:
 
 ## Usage
 
-### Managing Interview Contexts
-
-Run the interactive context manager:
+After running the setup script, you can use the tools directly from the bin directory:
 
 ```bash
-./src/manage_interview_context.py
+./bin/manage_interview_context
+./bin/redis_client
+./bin/find_redis_ip
 ```
 
-This presents a menu with options to:
-- List available interview contexts
-- Load a context into Redis for the robot
-- Create a new context
-- Exit
-
-You can also use command-line arguments:
+For convenience, you can add the bin directory to your PATH:
 ```bash
-# List available interview contexts
-./src/manage_interview_context.py --list
-# Load context 2 into Redis for the robot
-./src/manage_interview_context.py --load 2
-# Create a new context
-./src/manage_interview_context.py --new
+export PATH="$PATH:$(pwd)/bin"
 ```
 
-### Working with Redis Directly
-
-The `redis_client.py` utility allows direct interaction with Redis:
-
+Then you can run the commands from anywhere:
 ```bash
-# List available redis variables
-./src/redis_client.py --list
-
-# Get a specific variable
-./src/redis_client.py --get <key>
-
-# Set a specific variable
-./src/redis_client.py --set <key> <value>
-
-# Delete a specific variable
-./src/redis_client.py --delete <key>
+manage_interview_context
+redis_client
 ```
 
 ## How It Works
@@ -122,7 +99,7 @@ The `redis_client.py` utility allows direct interaction with Redis:
 
 ### Session Management
 
-The system uses a session ID system to organize Redis variables:
+The hrsdk system uses a session ID to organize Redis variables:
 - Each session has a unique ID stored in `default.current_session`
 - All variables for a session are prefixed with `default.{session_id}.`
 - This keeps Redis organized and allows multiple interview sessions

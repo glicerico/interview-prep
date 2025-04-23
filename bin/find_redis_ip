@@ -1,0 +1,5 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
+cd "$PROJECT_ROOT"  # Change to project root to ensure imports work
+"$PROJECT_ROOT/venv/bin/python" "$PROJECT_ROOT/src/find_redis_ip.py" "$@"

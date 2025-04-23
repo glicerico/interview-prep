@@ -1,4 +1,4 @@
-#!/usr/bin/env ./venv/bin/python
+#!/usr/bin/env python3
 """
 Manage interview contexts for hrsdk characters.
 
