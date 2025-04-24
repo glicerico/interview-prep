@@ -5,7 +5,7 @@ This module provides simulated responses without requiring actual API access.
 
 import json
 import random
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 
 class MockQwelloAPI:
@@ -29,32 +29,87 @@ class MockQwelloAPI:
             "rosa luxemburg": self._create_rosa_luxemburg_data(),
         }
         
-    def query(self, guest_name: str, focus_areas: str) -> Dict[str, Any]:
-        """
-        Simulate a query to the Qwello API.
+    def query(self, prompt: str) -> Dict[str, Any]:
+        """Process a query prompt and return mock research data.
         
         Args:
-            guest_name: Name of the guest
-            focus_areas: Comma-separated list of focus areas
+            prompt: The research prompt containing guest information and requirements
             
         Returns:
-            Dict containing simulated response data
+            Dict containing the mock response with research text
         """
-        # Normalize guest name for lookup
-        guest_name_normalized = guest_name.lower()
+        # Extract guest name and focus areas from the prompt
+        # This is a simple extraction - in a real implementation, you might use regex or NLP
+        guest_name = ""
+        focus_areas = ""
         
-        # Check if we have pre-defined data for this guest
-        if guest_name_normalized in self._guest_data:
-            response_data = self._guest_data[guest_name_normalized]
-        else:
-            # Generate generic data for unknown guests
-            response_data = self._create_generic_guest_data(guest_name, focus_areas)
+        # Try to extract the guest name
+        if "interviewing " in prompt:
+            name_part = prompt.split("interviewing ")[1].split(",")[0]
+            guest_name = name_part.strip()
         
-        # Customize response based on provided focus areas
-        response_data = self._customize_for_focus_areas(response_data, focus_areas)
+        # Try to extract focus areas
+        if "work in " in prompt:
+            areas_part = prompt.split("work in ")[1].split(".")[0]
+            focus_areas = areas_part.strip()
         
-        return response_data
+        # Generate mock data based on extracted information
+        areas = [area.strip() for area in focus_areas.split(',')]
+        
+        # Create mock response data
+        data = self._generate_mock_data(guest_name, areas)
+        
+        # Return the response
+        return {"text": data["text"]}
     
+    def _generate_mock_data(self, guest_name: str, areas: List[str]) -> Dict[str, Any]:
+        """Generate mock data for the given guest and focus areas."""
+        # Define possible background snippets
+        background = [
+            f"{guest_name} has over {random.randint(5, 30)} years of experience in the field.",
+            f"{guest_name} holds a degree from a prestigious institution in a field related to {random.choice(areas)}.",
+            f"{guest_name} has published notable work in {random.choice(areas)}.",
+            f"{guest_name} is recognized as an expert in {random.choice(areas)}.",
+            f"{guest_name} has been involved in several projects related to {random.choice(areas)}."
+        ]
+        
+        # Define possible achievements
+        achievements = [
+            f"Published a groundbreaking paper on {random.choice(areas)}",
+            f"Received an award for contributions to {random.choice(areas)}",
+            f"Founded a successful organization focused on {random.choice(areas)}",
+            f"Developed a new approach to {random.choice(areas)}",
+            f"Mentored many successful professionals in {random.choice(areas)}"
+        ]
+        
+        # Generate the mock response text
+        text = f"""
+{guest_name} is a professional known for their work in {', '.join(areas)}. 
+
+Background:
+{random.choice(background)}
+{random.choice(background)}
+
+Notable Achievements:
+- {random.choice(achievements)}
+- {random.choice(achievements)}
+- {random.choice(achievements)}
+
+Recent Work:
+{guest_name} has been exploring the intersection of {' and '.join(areas[:2] if len(areas) > 1 else areas)}
+and has developed unique perspectives on these topics. Their approach combines theoretical
+understanding with practical applications, making their insights valuable for both
+academic and industry audiences.
+
+Interview Considerations:
+The guest is known to be {random.choice(['passionate', 'thoughtful', 'analytical', 'visionary'])}
+about their work and responds well to {random.choice(['detailed technical questions', 'big-picture discussions', 'questions about real-world impact', 'exploring future possibilities'])}.
+
+Robot Interviewer Relevance:
+When being interviewed by a robot, {guest_name} might be {random.choice(['particularly interested in discussing AI ethics', 'curious about the robot\'s capabilities', 'likely to draw parallels between their work and robotics', 'comfortable with technical discussions that a robot interviewer could facilitate'])}.
+"""
+        return {"text": text}
+
     def _customize_for_focus_areas(self, data: Dict[str, Any], focus_areas: str) -> Dict[str, Any]:
         """Customize the response data based on specified focus areas."""
         areas_list = [area.strip() for area in focus_areas.split(',')]

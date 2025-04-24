@@ -27,8 +27,18 @@ def prepare_guest_prompt(guest_name: str, focus_areas: str, output_file: str = "
 
         # 2) Build the request payload for Qwello
         payload = {
-            "guest_name": guest_name,
-            "focus_areas": focus_areas
+            "prompt": f"""
+I need to prepare for an interview where a humanoid robot will be interviewing {guest_name}, who is known for their work in {focus_areas}.
+Please research this person and provide comprehensive background information including:
+- Their professional background and major achievements
+- Their expertise and contributions to {focus_areas}
+- Recent work, publications, or notable projects
+- Any controversies or challenges they've faced
+- Their communication style and interview preferences (if known)
+- Any information that would be particularly relevant for a robot interviewer to know
+
+Format the information in a clear, detailed manner that would help prepare for an in-depth interview conducted by a robot.
+""",
             # Additional query parameters as needed
         }
         headers = {
