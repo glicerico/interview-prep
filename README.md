@@ -119,3 +119,24 @@ In your robot's Jinja2 templates, you can access the interview data like this:
 - When you select a context, it's loaded into Redis with the current session ID
 - The system is designed to keep Redis clean by using session-based prefixes
 - Ensure you have valid API keys in your `.env` file if using external services
+
+### Working with Redis Directly
+
+The `redis_client.py` utility allows direct interaction with Redis:
+
+```bash
+# List variables (excluding sentence embeddings)
+./bin/redis_client --list
+
+# List all variables including sentence embeddings
+./bin/redis_client --list-all
+
+# Get a specific variable
+./bin/redis_client --get <key>
+
+# Set a specific variable
+./bin/redis_client --set <key> <value>
+
+# Delete a specific variable
+./bin/redis_client --delete <key>
+```

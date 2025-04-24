@@ -64,16 +64,38 @@ class RedisClient:
         print(f"Set '{key}' to '{value[:30]}...' (truncated)" if len(str(value)) > 30 else f"Set '{key}' to '{value}'.")
         return True
 
-    def list_variables(self):
-        """List all keys stored in Redis"""
+    def list_variables(self, filter_out=None):
+        """List all keys stored in Redis
+        
+        Args:
+            filter_out (list, optional): List of prefixes to filter out from results
+            
+        Returns:
+            list: List of keys that match the filter criteria
+        """
         keys = self.client.keys('*')
-        if keys:
+        
+        # Apply filters if specified
+        if filter_out is None:
+            filter_out = ["global.sentence_embedding"]
+        
+        filtered_keys = []
+        for key in keys:
+            # Skip keys that match any of the filter patterns
+            if any(key.startswith(pattern) for pattern in filter_out):
+                continue
+            filtered_keys.append(key)
+        
+        # Sort keys alphabetically
+        filtered_keys.sort()
+        
+        if filtered_keys:
             print("Stored variables:")
-            for key in keys:
+            for key in filtered_keys:
                 print(f"- {key}")
-            return keys
+            return filtered_keys
         else:
-            print("No keys found.")
+            print("No keys found (or all keys were filtered out).")
             return []
 
     def delete_variable(self, key):
@@ -104,7 +126,8 @@ def main():
     parser = argparse.ArgumentParser(description="Interact with Redis variables.")
     parser.add_argument('--set', nargs=2, metavar=('KEY', 'VALUE'), help="Set a variable to a specified value.")
     parser.add_argument('--get', metavar='KEY', help="Get the value of a specified variable.")
-    parser.add_argument('--list', action='store_true', help="List all variables.")
+    parser.add_argument('--list', action='store_true', help="List all variables (excluding sentence embeddings).")
+    parser.add_argument('--list-all', action='store_true', help="List all variables including sentence embeddings.")
     parser.add_argument('--delete', metavar='KEY', help="Delete a variable from Redis.")
     parser.add_argument('--host', help="Redis host (default: from REDIS_HOST env var or localhost)")
     parser.add_argument('--port', type=int, help="Redis port (default: from REDIS_PORT env var or 6379)")
@@ -125,7 +148,11 @@ def main():
     elif args.get:
         redis_client.get_variable(args.get)
     elif args.list:
-        redis_client.list_variables()
+        # Filter out sentence embeddings by default
+        redis_client.list_variables(filter_out=["global.sentence_embedding"])
+    elif args.list_all:
+        # Don't filter anything
+        redis_client.list_variables(filter_out=[])
     elif args.delete:
         redis_client.delete_variable(args.delete)
     else:
